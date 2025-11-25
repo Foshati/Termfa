@@ -1,8 +1,9 @@
 import "./App.css";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import "xterm/css/xterm.css";
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   const terminalInstanceRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const isReadingRef = useRef(false);
+  const [isMaximized, setIsMaximized] = useState(false);
 
   const readFromPty = useCallback(async () => {
     if (isReadingRef.current) return;
@@ -32,25 +34,25 @@ function App() {
     const initTerminal = async () => {
       const term = new Terminal({
         fontFamily: "'MesloLGS NF', 'Hack Nerd Font', 'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', monospace",
-        fontSize: 13,
-        lineHeight: 1.0,
-        letterSpacing: -0.5,
+        fontSize: 14,
+        lineHeight: 1.2,
+        letterSpacing: 0,
         cursorStyle: "block",
         cursorBlink: true,
         theme: {
-          background: "#0d1117",
-          foreground: "#c9d1d9",
-          cursor: "#79c0ff",
-          cursorAccent: "#0d1117",
+          background: "#0a0e14",
+          foreground: "#e6edf3",
+          cursor: "#58d1eb",
+          cursorAccent: "#0a0e14",
           selectionBackground: "#264f78",
           black: "#484f58",
           red: "#ff7b72",
-          green: "#7ee83f",
-          yellow: "#f9e2af",
-          blue: "#79c0ff",
-          magenta: "#d2a8ff",
-          cyan: "#56d4dd",
-          white: "#e6edf3",
+          green: "#3fb950",
+          yellow: "#d29922",
+          blue: "#58a6ff",
+          magenta: "#bc8cff",
+          cyan: "#39c5cf",
+          white: "#b1bac4",
           brightBlack: "#6e7681",
           brightRed: "#ffa198",
           brightGreen: "#56d364",
@@ -128,8 +130,67 @@ function App() {
     }
   };
 
+  const handleMinimize = async () => {
+    const appWindow = getCurrentWindow();
+    await appWindow.minimize();
+  };
+
+  const handleMaximize = async () => {
+    const appWindow = getCurrentWindow();
+    const maximized = await appWindow.isMaximized();
+    if (maximized) {
+      await appWindow.unmaximize();
+      setIsMaximized(false);
+    } else {
+      await appWindow.maximize();
+      setIsMaximized(true);
+    }
+  };
+
+  const handleClose = async () => {
+    const appWindow = getCurrentWindow();
+    await appWindow.close();
+  };
+
   return (
     <div className="app">
+      <div className="header" data-tauri-drag-region>
+        <div className="header-left">
+          <div className="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+              <path d="M7 8L10 11L7 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="12" y1="13" x2="17" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <span className="app-title">Termfa</span>
+          <span className="version">v0.0.6</span>
+        </div>
+        <div className="header-right">
+          <button className="window-btn minimize" onClick={handleMinimize} title="Minimize">
+            <svg width="12" height="12" viewBox="0 0 12 12">
+              <line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+          </button>
+          <button className="window-btn maximize" onClick={handleMaximize} title={isMaximized ? "Restore" : "Maximize"}>
+            {isMaximized ? (
+              <svg width="12" height="12" viewBox="0 0 12 12">
+                <rect x="2" y="2" width="8" height="8" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 12 12">
+                <rect x="1" y="1" width="10" height="10" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+              </svg>
+            )}
+          </button>
+          <button className="window-btn close" onClick={handleClose} title="Close">
+            <svg width="12" height="12" viewBox="0 0 12 12">
+              <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" strokeWidth="1.5"/>
+              <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" strokeWidth="1.5"/>
+            </svg>
+          </button>
+        </div>
+      </div>
       <div
         id="terminal"
         ref={terminalRef}
