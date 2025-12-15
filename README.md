@@ -1,208 +1,82 @@
-(https://img.shields.io/badge/Tauri-2.0-orange.svg)](https://tauri.app)
-[![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org)
+# 🚀 Termfa
 
-[English](#english) | [فارسی](#persian)
+<div align="center">
+
+![Termfa Logo](public/tauri.svg)
+
+**A modern and elegant terminal emulator built with Tauri and React**
+
+[![Version](https://img.shields.io/badge/version-0.0.6-blue.svg)](https://github.com/Foshati/terminal-tauri)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Tauri](https://img.shields.io/badge/Tauri-2.0-orange.svg)](https://tauri.app)
+[![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org)
 
 </div>
 
 ---
 
-## <a name="persian"></a>🇮🇷 فارسی
+## 📖 About the Project
 
-### 📖 درباره پروژه
-
-**Termfa** یک ترمینال مدرن و زیبا است که با استفاده از فناوری‌های پیشرفته Tauri و React ساخته شده است. این پروژه یک تجربه کاربری حرفه‌ای و روان را با طراحی مدرن و امکانات پیشرفته ارائه می‌دهد.
-
-### ✨ ویژگی‌های کلیدی
-
-- 🎨 **طراحی مدرن و زیبا**: رابط کاربری با گرادیانت‌های مدرن و انیمیشن‌های ظریف
-- ⚡ **عملکرد بالا**: ساخته شده با Tauri برای سرعت و کارایی بهینه
-- 🎯 **کنترل‌های پنجره**: دکمه‌های minimize، maximize و close با طراحی زیبا
-- 🌈 **تم تیره حرفه‌ای**: رنگ‌بندی بهینه شده برای کار طولانی‌مدت
-- 🔤 **فونت Nerd**: پشتیبانی کامل از فونت‌های Nerd برای نمایش آیکون‌ها
-- 📦 **سبک‌وزن**: اندازه فایل کوچک و مصرف منابع کم
-- 🔧 **قابل سفارشی‌سازی**: امکان تنظیم تم، فونت و سایر تنظیمات
-
-### 🛠️ فناوری‌های استفاده شده
-
-#### Frontend
-- **React 19.1** - کتابخانه UI مدرن
-- **TypeScript** - برای type safety و توسعه بهتر
-- **Tailwind CSS 4.1** - فریمورک CSS مدرن
-- **Xterm.js 5.3** - کتابخانه ترمینال قدرتمند
-- **Vite 7.0** - ابزار build سریع
-
-#### Backend
-- **Tauri 2.0** - فریمورک دسکتاپ مدرن
-- **Rust** - برای عملکرد بهینه و امنیت بالا
-
-### 📋 پیش‌نیازها
-
-قبل از شروع، مطمئن شوید که موارد زیر را نصب کرده‌اید:
-
-- [Node.js](https://nodejs.org/) (نسخه 18 یا بالاتر)
-- [Bun](https://bun.sh/) (مدیر پکیج سریع)
-- [Rust](https://www.rust-lang.org/) (برای Tauri)
-- [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites)
-
-### 🚀 نصب و راه‌اندازی
-
-#### 1. کلون کردن پروژه
-
-```bash
-git clone https://github.com/Foshati/terminal-tauri.git
-cd termfa
-```
-
-#### 2. نصب وابستگی‌ها
-
-```bash
-bun install
-```
-
-#### 3. اجرای پروژه در حالت توسعه
-
-```bash
-bun run tauri:dev
-# یا
-bun run start
-```
-
-#### 4. ساخت نسخه نهایی
-
-```bash
-bun run build
-bun run tauri build
-```
-
-### 📁 ساختار پروژه
-
-```
-termfa/
-├── src/                    # کدهای React
-│   ├── App.tsx            # کامپوننت اصلی
-│   ├── App.css            # استایل‌های اصلی
-│   └── main.tsx           # نقطه ورود
-├── src-tauri/             # کدهای Tauri (Rust)
-│   ├── src/               # کدهای منبع Rust
-│   └── tauri.conf.json    # تنظیمات Tauri
-├── public/                # فایل‌های استاتیک
-│   └── fonts/             # فونت‌های Nerd
-├── index.html             # HTML اصلی
-├── package.json           # وابستگی‌های npm
-└── vite.config.ts         # تنظیمات Vite
-```
-
-### 🎨 سفارشی‌سازی
-
-#### تغییر تم رنگی
-
-فایل `src/App.tsx` را باز کنید و تنظیمات `theme` را تغییر دهید:
-
-```typescript
-theme: {
-  background: "#0a0e14",
-  foreground: "#e6edf3",
-  cursor: "#58d1eb",
-  // ... سایر رنگ‌ها
-}
-```
-
-#### تغییر فونت
-
-فایل `src/App.css` را ویرایش کنید و فونت دلخواه خود را اضافه کنید.
-
-### 🔑 میانبرهای کیبورد
-
-- `Ctrl/Cmd + C` - کپی کردن متن انتخاب شده
-- `Ctrl/Cmd + V` - چسباندن متن
-- `Ctrl/Cmd + Shift + C` - کپی کردن
-- `Ctrl/Cmd + Shift + V` - چسباندن
-
-### 🤝 مشارکت
-
-مشارکت شما در بهبود این پروژه بسیار ارزشمند است! لطفاً:
-
-1. پروژه را Fork کنید
-2. یک Branch جدید بسازید (`git checkout -b feature/AmazingFeature`)
-3. تغییرات خود را Commit کنید (`git commit -m 'Add some AmazingFeature'`)
-4. به Branch خود Push کنید (`git push origin feature/AmazingFeature`)
-5. یک Pull Request باز کنید
-
-### 📝 لایسنس
-
-این پروژه تحت لایسنس MIT منتشر شده است. برای اطلاعات بیشتر فایل [LICENSE](LICENSE) را مشاهده کنید.
-
-### 👨‍💻 توسعه‌دهنده
-
-**Foshati**
-
-- GitHub: [@Foshati](https://github.com/Foshati)
-- Email: your.email@example.com
-
-### 🙏 تشکر و قدردانی
-
-- [Tauri](https://tauri.app/) - فریمورک دسکتاپ
-- [React](https://reactjs.org/) - کتابخانه UI
-- [Xterm.js](https://xtermjs.org/) - کتابخانه ترمینال
-- [Tailwind CSS](https://tailwindcss.com/) - فریمورک CSS
+**Termfa** is a modern, lightweight, and visually refined terminal emulator built using cutting-edge **Tauri** and **React** technologies. It focuses on performance, aesthetics, and developer experience, offering a smooth and professional terminal environment with a modern UI.
 
 ---
 
-## <a name="english"></a>🇬🇧 English
+## ✨ Key Features
 
-### 📖 About The Project
+* 🎨 **Modern UI** with gradients and subtle animations
+* ⚡ **High performance** powered by Tauri and Rust
+* 🎯 **Custom window controls** (minimize, maximize, close)
+* 🌙 **Professional dark theme** optimized for long sessions
+* 🔤 **Nerd Font support** for rich icon rendering
+* 📦 **Lightweight & efficient** with minimal resource usage
+* 🔧 **Highly customizable** themes, fonts, and settings
 
-**Termfa** is a modern and beautiful terminal emulator built with cutting-edge Tauri and React technologies. This project provides a professional and smooth user experience with modern design and advanced features.
+---
 
-### ✨ Key Features
+## 🛠️ Tech Stack
 
-- 🎨 **Modern & Beautiful Design**: UI with modern gradients and subtle animations
-- ⚡ **High Performance**: Built with Tauri for optimal speed and efficiency
-- 🎯 **Window Controls**: Minimize, maximize, and close buttons with beautiful design
-- 🌈 **Professional Dark Theme**: Optimized color scheme for long-term work
-- 🔤 **Nerd Fonts**: Full support for Nerd Fonts to display icons
-- 📦 **Lightweight**: Small file size and low resource consumption
-- 🔧 **Customizable**: Ability to customize theme, font, and other settings
+### Frontend
 
-### 🛠️ Built With
+* **React 19.1** – Modern UI library
+* **TypeScript** – Type safety and scalability
+* **Tailwind CSS 4.1** – Utility-first styling
+* **Xterm.js 5.3** – Powerful terminal engine
+* **Vite 7.0** – Fast development and build tool
 
-#### Frontend
-- **React 19.1** - Modern UI library
-- **TypeScript** - For type safety and better development
-- **Tailwind CSS 4.1** - Modern CSS framework
-- **Xterm.js 5.3** - Powerful terminal library
-- **Vite 7.0** - Fast build tool
+### Backend
 
-#### Backend
-- **Tauri 2.0** - Modern desktop framework
-- **Rust** - For optimal performance and high security
+* **Tauri 2.0** – Secure and fast desktop framework
+* **Rust** – High performance and memory safety
 
-### 📋 Prerequisites
+---
 
-Before you begin, ensure you have the following installed:
+## 📋 Prerequisites
 
-- [Node.js](https://nodejs.org/) (version 18 or higher)
-- [Bun](https://bun.sh/) (fast package manager)
-- [Rust](https://www.rust-lang.org/) (for Tauri)
-- [Tauri Prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites)
+Make sure you have the following installed:
 
-### 🚀 Installation & Setup
+* [Node.js](https://nodejs.org/) (v18 or higher)
+* [Bun](https://bun.sh/) (package manager)
+* [Rust](https://www.rust-lang.org/)
+* [Tauri prerequisites](https://tauri.app/v1/guides/getting-started/prerequisites)
 
-#### 1. Clone the repository
+---
+
+## 🚀 Installation & Setup
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Foshati/terminal-tauri.git
 cd termfa
 ```
 
-#### 2. Install dependencies
+### 2. Install dependencies
 
 ```bash
 bun install
 ```
 
-#### 3. Run in development mode
+### 3. Run in development mode
 
 ```bash
 bun run tauri:dev
@@ -210,90 +84,104 @@ bun run tauri:dev
 bun run start
 ```
 
-#### 4. Build for production
+### 4. Build for production
 
 ```bash
 bun run build
 bun run tauri build
 ```
 
-### 📁 Project Structure
+---
 
-```
+## 📁 Project Structure
+
+```text
 termfa/
-├── src/                    # React code
+├── src/                    # React source code
 │   ├── App.tsx            # Main component
-│   ├── App.css            # Main styles
+│   ├── App.css            # Global styles
 │   └── main.tsx           # Entry point
-├── src-tauri/             # Tauri code (Rust)
-│   ├── src/               # Rust source code
+├── src-tauri/             # Tauri (Rust) backend
+│   ├── src/               # Rust source files
 │   └── tauri.conf.json    # Tauri configuration
-├── public/                # Static files
+├── public/                # Static assets
 │   └── fonts/             # Nerd Fonts
-├── index.html             # Main HTML
-├── package.json           # npm dependencies
+├── index.html             # Main HTML file
+├── package.json           # Project dependencies
 └── vite.config.ts         # Vite configuration
 ```
 
-### 🎨 Customization
+---
 
-#### Change Color Theme
+## 🎨 Customization
 
-Open `src/App.tsx` and modify the `theme` settings:
+### Change the Color Theme
 
-```typescript
+Edit the `theme` configuration in `src/App.tsx`:
+
+```ts
 theme: {
   background: "#0a0e14",
   foreground: "#e6edf3",
   cursor: "#58d1eb",
-  // ... other colors
+  // ...other colors
 }
 ```
 
-#### Change Font
+### Change the Font
 
-Edit `src/App.css` and add your desired font.
+Modify `src/App.css` and include your preferred font (Nerd Fonts recommended).
 
-### 🔑 Keyboard Shortcuts
+---
 
-- `Ctrl/Cmd + C` - Copy selected text
-- `Ctrl/Cmd + V` - Paste text
-- `Ctrl/Cmd + Shift + C` - Copy
-- `Ctrl/Cmd + Shift + V` - Paste
+## ⌨️ Keyboard Shortcuts
 
-### 🤝 Contributing
+* `Ctrl / Cmd + C` – Copy selected text
+* `Ctrl / Cmd + V` – Paste text
+* `Ctrl / Cmd + Shift + C` – Copy
+* `Ctrl / Cmd + Shift + V` – Paste
 
-Your contribution to improving this project is highly valued! Please:
+---
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+## 🤝 Contributing
+
+Contributions are very welcome and appreciated.
+
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -m 'Add YourFeature'`)
+4. Push to your branch (`git push origin feature/YourFeature`)
 5. Open a Pull Request
 
-### 📝 License
+---
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more information.
+## 📝 License
 
-### 👨‍💻 Developer
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## 👨‍💻 Author
 
 **Foshati**
 
-- GitHub: [@Foshati](https://github.com/Foshati)
-- Email: your.email@example.com
+* GitHub: [@Foshati](https://github.com/Foshati)
+* Email: [your.email@example.com](mailto:your.email@example.com)
 
-### 🙏 Acknowledgments
+---
 
-- [Tauri](https://tauri.app/) - Desktop framework
-- [React](https://reactjs.org/) - UI library
-- [Xterm.js](https://xtermjs.org/) - Terminal library
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+## 🙏 Acknowledgments
+
+* [Tauri](https://tauri.app/) – Desktop framework
+* [React](https://reactjs.org/) – UI library
+* [Xterm.js](https://xtermjs.org/) – Terminal engine
+* [Tailwind CSS](https://tailwindcss.com/) – CSS framework
 
 ---
 
 <div align="center">
 
-**⭐ اگر این پروژه را دوست دارید، لطفاً یک ستاره بدهید! | If you like this project, please give it a star! ⭐**
+⭐ If you like this project, please give it a star!
 
 Made with ❤️ by Foshati
 
