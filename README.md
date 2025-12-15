@@ -1,14 +1,4 @@
-# 🚀 Termfa
-
-<div align="center">
-
-![Termfa Logo](public/tauri.svg)
-
-**یک ترمینال مدرن و زیبا ساخته شده با Tauri و React**
-
-[![Version](https://img.shields.io/badge/version-0.0.6-blue.svg)](https://github.com/Foshati/terminal-tauri)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tauri](https://img.shields.io/badge/Tauri-2.0-orange.svg)](https://tauri.app)
+(https://img.shields.io/badge/Tauri-2.0-orange.svg)](https://tauri.app)
 [![React](https://img.shields.io/badge/React-19.1-61dafb.svg)](https://reactjs.org)
 
 [English](#english) | [فارسی](#persian)
