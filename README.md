@@ -1,4 +1,4 @@
-# 🚀 Termfa
+#  Termfa
 
 <div align="center">
 
@@ -61,7 +61,7 @@ Make sure you have the following installed:
 
 ---
 
-## 🚀 Installation & Setup
+##  Installation & Setup
 
 ### 1. Clone the repository
 
