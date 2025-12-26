@@ -15,7 +15,11 @@ struct AppState {
 }
 
 #[tauri::command]
-async fn async_create_shell(state: State<'_, AppState>) -> Result<(), String> {
+async fn async_create_shell(
+    program: Option<String>,
+    args: Option<Vec<String>>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
     let pty_system = native_pty_system();
     let pty_pair = pty_system
         .openpty(PtySize {
@@ -34,8 +38,15 @@ async fn async_create_shell(state: State<'_, AppState>) -> Result<(), String> {
     *state.master.lock().unwrap() = Some(pty_pair.master);
     *state.slave.lock().unwrap() = Some(pty_pair.slave);
 
-    let mut cmd = CommandBuilder::new("zsh");
+    let default_shell = std::env::var("SHELL").unwrap_or_else(|_| "zsh".to_string());
+    let cmd_program = program.unwrap_or(default_shell);
+    
+    let mut cmd = CommandBuilder::new(cmd_program);
     cmd.env("TERM", "xterm-256color");
+    
+    if let Some(arguments) = args {
+        cmd.args(arguments);
+    }
 
     if let Some(ref slave) = *state.slave.lock().unwrap() {
         let _child = slave.spawn_command(cmd).map_err(|e| e.to_string())?;

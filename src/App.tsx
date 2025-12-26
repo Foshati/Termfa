@@ -5,6 +5,9 @@ import { FitAddon } from "xterm-addon-fit";
 import { invoke } from "@tauri-apps/api/core";
 import "xterm/css/xterm.css";
 import SettingsModal from "./components/SettingsModal";
+import Sidebar from "./components/Sidebar";
+import HostList from "./components/HostList";
+import { Host } from "./types";
 import { themes } from "./themes";
 
 function App() {
@@ -13,12 +16,16 @@ function App() {
   const fitAddonRef = useRef<FitAddon | null>(null);
   const isReadingRef = useRef(false);
   
+  const [activeTab, setActiveTab] = useState<'terminal' | 'hosts' | 'settings'>('terminal');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   // Settings State
   const [currentTheme, setCurrentTheme] = useState("default");
   const [fontSize, setFontSize] = useState(14);
   const [cursorStyle, setCursorStyle] = useState<'block' | 'underline' | 'bar'>("block");
+
+  // Session State
+  const [currentHost, setCurrentHost] = useState<Host | null>(null);
 
   const readFromPty = useCallback(async () => {
     if (isReadingRef.current) return;
@@ -69,7 +76,11 @@ function App() {
         
         term.onData(writeToPty);
         
-        await initShell();
+        // Start default shell if no host connected yet
+        if (!currentHost) {
+           await startShell();
+        }
+        
         fitTerminal();
         readFromPty();
       }
@@ -110,17 +121,29 @@ function App() {
 
   const fitTerminal = async () => {
     if (fitAddonRef.current && terminalInstanceRef.current) {
-      fitAddonRef.current.fit();
-      try {
-        await invoke("async_resize_pty", {
-          rows: terminalInstanceRef.current.rows,
-          cols: terminalInstanceRef.current.cols,
-        });
-      } catch (error) {
-        console.error("Error resizing PTY:", error);
-      }
+        // Wait a bit for layout to settle, especially when switching tabs
+        setTimeout(async () => {
+            fitAddonRef.current?.fit();
+            try {
+                if (terminalInstanceRef.current) {
+                    await invoke("async_resize_pty", {
+                    rows: terminalInstanceRef.current.rows,
+                    cols: terminalInstanceRef.current.cols,
+                    });
+                }
+            } catch (error) {
+                console.error("Error resizing PTY:", error);
+            }
+        }, 100);
     }
   };
+
+  // Re-fit when tab changes
+  useEffect(() => {
+      if (activeTab === 'terminal') {
+          fitTerminal();
+      }
+  }, [activeTab]);
 
   const writeToPty = async (data: string) => {
     try {
@@ -130,43 +153,94 @@ function App() {
     }
   };
 
-  const initShell = async () => {
+  const startShell = async (host?: Host) => {
     try {
-      await invoke("async_create_shell");
+      let program = undefined;
+      let args = undefined;
+
+      if (host) {
+          program = "ssh";
+          args = [host.username + "@" + host.hostname, "-p", host.port.toString()];
+          
+          if (host.authType === "key" && host.keyPath) {
+              args.push("-i");
+              args.push(host.keyPath);
+          }
+          // Note: Password auth is interactive in SSH. xterm will handle the password prompt.
+      }
+
+      await invoke("async_create_shell", { program, args });
+      
+      if (terminalInstanceRef.current) {
+          terminalInstanceRef.current.clear();
+          terminalInstanceRef.current.reset();
+      }
+      setCurrentHost(host || null);
     } catch (error) {
       console.error("Error creating shell:", error);
     }
   };
 
+  const handleConnect = async (host: Host) => {
+      setActiveTab('terminal');
+      await startShell(host);
+  };
+
   return (
-    <div className="app">
-      <div className="tab-bar" data-tauri-drag-region>
-        <div className="tab active">
-          <span className="tab-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="4 17 10 11 4 5"></polyline>
-              <line x1="12" y1="19" x2="20" y2="19"></line>
-            </svg>
-          </span>
-          <span className="tab-title">Terminal</span>
-        </div>
-        <div className="tab-spacer" data-tauri-drag-region></div>
-        <button 
-          className="tab-button settings-btn" 
-          onClick={() => setIsSettingsOpen(true)} 
-          title="Settings"
+    <div className="flex bg-neutral-950 h-screen text-white overflow-hidden font-sans">
+      <Sidebar 
+        activeTab={activeTab === 'settings' ? 'terminal' : activeTab} 
+        onTabChange={(tab) => {
+            if (tab === 'settings') {
+                setIsSettingsOpen(true);
+            } else {
+                setActiveTab(tab);
+            }
+        }} 
+      />
+
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        {/* Terminal View */}
+        <div 
+            className={`flex-1 flex flex-col min-h-0 transition-opacity duration-200 ${
+                activeTab === 'terminal' ? 'opacity-100 z-10' : 'opacity-0 absolute inset-0 pointer-events-none'
+            }`}
         >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </button>
+             <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-2 flex items-center justify-between h-12">
+                <div className="flex items-center gap-2 text-sm text-neutral-400">
+                     <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+                     {currentHost ? `${currentHost.username}@${currentHost.hostname}` : 'Local Terminal'}
+                </div>
+             </div>
+             <div className="flex-1 bg-neutral-950 p-2 overflow-hidden relative">
+                <div
+                    id="terminal"
+                    ref={terminalRef}
+                    className="w-full h-full"
+                ></div>
+             </div>
+        </div>
+
+        {/* Hosts View */}
+        {activeTab === 'hosts' && (
+            <div className="h-full flex">
+                <HostList onConnect={handleConnect} />
+                {/* Could add a preview/details pane here for right side of hosts list */}
+                <div className="flex-1 bg-neutral-950 flex items-center justify-center text-neutral-600">
+                    <div className="text-center">
+                        <svg className="w-24 h-24 mx-auto mb-4 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                             <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                        </svg>
+                        <p>Select a host to connect</p>
+                    </div>
+                </div>
+            </div>
+        )}
+
       </div>
-      <div
-        id="terminal"
-        ref={terminalRef}
-        className="terminal-container"
-      ></div>
       
       <SettingsModal 
         isOpen={isSettingsOpen}
