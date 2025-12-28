@@ -73,6 +73,6 @@ jobs:
             - **macOS (Intel)**: `.dmg` file for Intel Macs
             - **Windows**: `.msi` installer or `.exe`
             - **Linux**: `.deb`, `.rpm`, or `.AppImage`
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
