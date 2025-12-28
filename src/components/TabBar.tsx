@@ -1,4 +1,6 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
+import { Plus, X, Terminal } from "lucide-react";
 
 interface TabBarProps {
   tabs: Array<{ id: string; title: string }>;
@@ -15,122 +17,49 @@ const TabBar: React.FC<TabBarProps> = ({
   onTabChange,
   onNewTab,
   onCloseTab,
-  onTabRename,
 }) => {
-  const [editingTabId, setEditingTabId] = React.useState<string | null>(null);
-  const [editValue, setEditValue] = React.useState("");
-
-  const handleDoubleClick = (tab: { id: string; title: string }) => {
-    setEditingTabId(tab.id);
-    setEditValue(tab.title);
-  };
-
-  const handleRenameSubmit = (tabId: string) => {
-    if (editValue.trim()) {
-      onTabRename(tabId, editValue.trim());
-    }
-    setEditingTabId(null);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent, tabId: string) => {
-    if (e.key === "Enter") {
-      handleRenameSubmit(tabId);
-    } else if (e.key === "Escape") {
-      setEditingTabId(null);
-    }
-  };
-
   return (
-    <div className="flex items-center bg-neutral-900 border-b border-neutral-800 h-10 px-2 gap-1 overflow-x-auto scrollbar-thin">
-      {tabs.map((tab) => (
-        <div
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
-          onDoubleClick={() => handleDoubleClick(tab)}
-          className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg cursor-pointer transition-all select-none min-w-[100px] max-w-[180px] ${
-            activeTabId === tab.id
-              ? "bg-neutral-800 text-white"
-              : "text-neutral-400 hover:text-white hover:bg-neutral-800/50"
-          }`}
-        >
-          {/* Terminal Icon */}
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="flex-shrink-0"
+    <div className="flex items-center bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-900/95 border-b border-zinc-800/50 h-11 px-2 gap-1 shadow-lg">
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeTabId;
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`group relative flex items-center gap-2 h-8 px-4 rounded-lg transition-all duration-200 ${
+              isActive
+                ? "bg-gradient-to-br from-cyan-500/15 to-blue-600/15 text-white ring-1 ring-cyan-500/30 shadow-lg shadow-cyan-500/5"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
+            }`}
           >
-            <polyline points="4 17 10 11 4 5"></polyline>
-            <line x1="12" y1="19" x2="20" y2="19"></line>
-          </svg>
-
-          {/* Tab Title */}
-          {editingTabId === tab.id ? (
-            <input
-              type="text"
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => handleRenameSubmit(tab.id)}
-              onKeyDown={(e) => handleKeyDown(e, tab.id)}
-              autoFocus
-              className="bg-transparent border-none outline-none text-sm w-full text-white"
-            />
-          ) : (
-            <span className="text-sm truncate">{tab.title}</span>
-          )}
-
-          {/* Close Button */}
-          {tabs.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onCloseTab(tab.id);
-              }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-neutral-700 rounded transition-all flex-shrink-0"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <Terminal className={`h-3.5 w-3.5 ${isActive ? "text-cyan-400" : ""}`} />
+            <span className="max-w-[100px] truncate text-xs font-medium">{tab.title}</span>
+            {tabs.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCloseTab(tab.id);
+                }}
+                className="ml-1 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 hover:text-red-400 rounded p-0.5 transition-all duration-150"
               >
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          )}
-        </div>
-      ))}
+                <X className="h-3 w-3" />
+              </button>
+            )}
+            {isActive && (
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" />
+            )}
+          </button>
+        );
+      })}
 
-      {/* New Tab Button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
         onClick={onNewTab}
-        className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg transition-all flex-shrink-0"
-        title="New Tab (⌘T)"
+        className="h-8 w-8 shrink-0 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800/50 transition-all duration-200"
       >
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-      </button>
+        <Plus className="h-4 w-4" />
+      </Button>
     </div>
   );
 };

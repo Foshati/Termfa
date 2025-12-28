@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Host } from '../types/index';
+import React, { useState, useEffect } from "react";
+import { Host } from "@/types/index";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface HostFormProps {
   initialData?: Host | null;
@@ -10,15 +14,15 @@ interface HostFormProps {
 const HostForm: React.FC<HostFormProps> = ({ initialData, onSave, onCancel }) => {
   const [formData, setFormData] = useState<Host>({
     id: crypto.randomUUID(),
-    label: '',
-    hostname: '',
+    label: "",
+    hostname: "",
     port: 22,
-    username: '',
-    authType: 'password',
-    password: '',
-    keyPath: '',
-    group: 'Default',
-    tags: []
+    username: "",
+    authType: "password",
+    password: "",
+    keyPath: "",
+    group: "Default",
+    tags: [],
   });
 
   useEffect(() => {
@@ -27,11 +31,11 @@ const HostForm: React.FC<HostFormProps> = ({ initialData, onSave, onCancel }) =>
     }
   }, [initialData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'port' ? parseInt(value) || 22 : value
+      [name]: name === "port" ? parseInt(value) || 22 : value,
     }));
   };
 
@@ -41,128 +45,133 @@ const HostForm: React.FC<HostFormProps> = ({ initialData, onSave, onCancel }) =>
   };
 
   return (
-    <div className="bg-neutral-800 p-6 rounded-2xl shadow-xl w-full max-w-md mx-auto border border-neutral-700">
-      <h2 className="text-2xl font-bold text-white mb-6">
-        {initialData ? 'Edit Host' : 'New Host'}
-      </h2>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Label</label>
-          <input
-            type="text"
-            name="label"
-            value={formData.label}
-            onChange={handleChange}
-            placeholder="My Web Server"
-            className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-neutral-600"
-            required
-            autoFocus
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div className="col-span-2">
-            <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Hostname / IP</label>
-            <input
-              type="text"
-              name="hostname"
-              value={formData.hostname}
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>{initialData ? "Edit Host" : "New Host"}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Label
+            </label>
+            <Input
+              name="label"
+              value={formData.label}
               onChange={handleChange}
-              placeholder="192.168.1.1"
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-neutral-600 font-mono"
+              placeholder="My Web Server"
               required
+              autoFocus
             />
           </div>
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Port</label>
-            <input
-              type="number"
-              name="port"
-              value={formData.port}
-              onChange={handleChange}
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-neutral-600 font-mono"
-            />
-          </div>
-        </div>
 
-        <div>
-            <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Username</label>
-            <input
-              type="text"
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2 space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Hostname / IP
+              </label>
+              <Input
+                name="hostname"
+                value={formData.hostname}
+                onChange={handleChange}
+                placeholder="192.168.1.1"
+                className="font-mono"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Port
+              </label>
+              <Input
+                type="number"
+                name="port"
+                value={formData.port}
+                onChange={handleChange}
+                className="font-mono"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Username
+            </label>
+            <Input
               name="username"
               value={formData.username}
               onChange={handleChange}
               placeholder="root"
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-neutral-600 font-mono"
+              className="font-mono"
               required
             />
-        </div>
-
-        <div>
-           <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Auth Type</label>
-           <div className="flex gap-2 bg-neutral-900 p-1 rounded-lg border border-neutral-700">
-               {['password', 'key', 'agent'].map(type => (
-                   <button
-                        key={type}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, authType: type as any }))}
-                        className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                            formData.authType === type 
-                            ? 'bg-neutral-700 text-white shadow-sm' 
-                            : 'text-neutral-500 hover:text-neutral-300'
-                        }`}
-                   >
-                       {type.charAt(0).toUpperCase() + type.slice(1)}
-                   </button>
-               ))}
-           </div>
-        </div>
-
-        {formData.authType === 'password' && (
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password || ''}
-              onChange={handleChange}
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-neutral-600 font-mono"
-            />
           </div>
-        )}
 
-        {formData.authType === 'key' && (
-           <div>
-            <label className="block text-xs uppercase tracking-wider text-neutral-400 font-semibold mb-1">Private Key Path</label>
-            <input
-              type="text"
-              name="keyPath"
-              value={formData.keyPath || ''}
-              onChange={handleChange}
-              placeholder="~/.ssh/id_rsa"
-              className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all placeholder-neutral-600 font-mono"
-            />
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Auth Type
+            </label>
+            <Tabs
+              value={formData.authType}
+              onValueChange={(v) =>
+                setFormData((prev) => ({ ...prev, authType: v as Host["authType"] }))
+              }
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="password" className="flex-1">
+                  Password
+                </TabsTrigger>
+                <TabsTrigger value="key" className="flex-1">
+                  Key
+                </TabsTrigger>
+                <TabsTrigger value="agent" className="flex-1">
+                  Agent
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-        )}
 
-        <div className="flex gap-3 mt-8 pt-4 border-t border-neutral-700">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 px-4 py-3 bg-neutral-700 hover:bg-neutral-600 text-white rounded-xl transition-colors font-medium"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg shadow-blue-900/40 transition-all font-medium"
-          >
-            Save Host
-          </button>
-        </div>
-      </form>
-    </div>
+          {formData.authType === "password" && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Password
+              </label>
+              <Input
+                type="password"
+                name="password"
+                value={formData.password || ""}
+                onChange={handleChange}
+                className="font-mono"
+              />
+            </div>
+          )}
+
+          {formData.authType === "key" && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Private Key Path
+              </label>
+              <Input
+                name="keyPath"
+                value={formData.keyPath || ""}
+                onChange={handleChange}
+                placeholder="~/.ssh/id_rsa"
+                className="font-mono"
+              />
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1">
+              Save Host
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 

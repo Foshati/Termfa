@@ -1,15 +1,16 @@
-import "./App.css";
+import "@/App.css";
 import { useEffect, useCallback, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "xterm/css/xterm.css";
-import SettingsModal from "./components/SettingsModal";
-import Sidebar from "./components/Sidebar";
-import HostList from "./components/HostList";
-import TabBar from "./components/TabBar";
-import LayoutRenderer from "./components/LayoutRenderer";
-import { Host, Tab, TerminalSession, LayoutNode } from "./types";
-import { themes } from "./themes";
-import { saveTabState, getSettings, saveSettings } from "./utils/storage";
+import SettingsModal from "@/components/SettingsModal";
+import Sidebar from "@/components/Sidebar";
+import HostList from "@/components/HostList";
+import TabBar from "@/components/TabBar";
+import LayoutRenderer from "@/components/LayoutRenderer";
+import { Host, Tab, TerminalSession, LayoutNode } from "@/types";
+import { themes } from "@/themes";
+import { saveTabState, getSettings, saveSettings } from "@/utils/storage";
+import { Wifi } from "lucide-react";
 
 function App() {
   // Settings State
@@ -279,7 +280,7 @@ function App() {
   const activeTab = tabs.find((t) => t.id === activeTabId);
 
   return (
-    <div className="flex bg-neutral-950 h-screen text-white overflow-hidden font-sans">
+    <div className="dark flex bg-zinc-950 h-screen text-white overflow-hidden font-sans">
       <Sidebar
         activeTab={activeView}
         onTabChange={(tab) => {
@@ -311,7 +312,7 @@ function App() {
           />
 
           {/* Terminal Content */}
-          <div className="flex-1 bg-neutral-950 overflow-hidden relative">
+          <div className="flex-1 bg-zinc-950 overflow-hidden relative">
             {activeTab && (
               <LayoutRenderer
                 node={activeTab.layout}
@@ -330,23 +331,13 @@ function App() {
         {activeView === "hosts" && (
           <div className="h-full flex">
             <HostList onConnect={handleConnect} />
-            <div className="flex-1 bg-neutral-950 flex items-center justify-center text-neutral-600">
+            <div className="flex-1 bg-gradient-to-br from-zinc-900 via-zinc-950 to-zinc-900 flex items-center justify-center">
               <div className="text-center">
-                <svg
-                  className="w-24 h-24 mx-auto mb-4 opacity-20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                </svg>
-                <p>Select a host to connect</p>
+                <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-zinc-800/50 to-zinc-900 flex items-center justify-center ring-1 ring-zinc-700/30 shadow-2xl">
+                  <Wifi className="w-10 h-10 text-zinc-600" />
+                </div>
+                <p className="text-zinc-500 text-sm">Select a host to connect</p>
+                <p className="text-zinc-600 text-xs mt-1">or create a new one</p>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import React from "react";
-import { LayoutNode } from "../types";
-import { TerminalTheme } from "../themes";
+import { LayoutNode } from "@/types";
+import { TerminalTheme } from "@/themes";
 import TerminalPane from "./TerminalPane";
 import SplitContainer from "./SplitContainer";
 

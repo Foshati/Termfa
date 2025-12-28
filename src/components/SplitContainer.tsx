@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { cn } from "@/lib/utils";
 
 interface SplitContainerProps {
   direction: "horizontal" | "vertical";
@@ -90,7 +91,7 @@ const SplitContainer: React.FC<SplitContainerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`flex w-full h-full ${isHorizontal ? "flex-col" : "flex-row"}`}
+      className={cn("flex w-full h-full", isHorizontal ? "flex-col" : "flex-row")}
     >
       {/* First Pane */}
       <div
@@ -107,22 +108,22 @@ const SplitContainer: React.FC<SplitContainerProps> = ({
       <div
         onMouseDown={handleMouseDown}
         onDoubleClick={handleDoubleClick}
-        className={`
-          flex-shrink-0 group relative z-10
-          ${isHorizontal ? "h-1 w-full cursor-row-resize" : "w-1 h-full cursor-col-resize"}
-          ${isDragging ? "bg-blue-500" : "bg-neutral-700 hover:bg-blue-500/50"}
-          transition-colors
-        `}
+        className={cn(
+          "flex-shrink-0 group relative z-10 transition-colors",
+          isHorizontal
+            ? "h-1 w-full cursor-row-resize"
+            : "w-1 h-full cursor-col-resize",
+          isDragging ? "bg-primary" : "bg-border hover:bg-primary/50"
+        )}
       >
         {/* Visual indicator on hover */}
         <div
-          className={`
-            absolute opacity-0 group-hover:opacity-100 transition-opacity
-            ${isHorizontal 
-              ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1 rounded-full bg-neutral-500" 
-              : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-12 rounded-full bg-neutral-500"
-            }
-          `}
+          className={cn(
+            "absolute opacity-0 group-hover:opacity-100 transition-opacity bg-muted-foreground rounded-full",
+            isHorizontal
+              ? "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1"
+              : "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-12"
+          )}
         />
       </div>
 

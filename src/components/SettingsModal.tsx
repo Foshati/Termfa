@@ -1,15 +1,24 @@
-import React from 'react';
-import { themes } from '../themes';
+import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { themes } from "@/themes";
+import { Minus, Plus, Palette, Type, MousePointer2 } from "lucide-react";
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTheme: string;
-  onThemeChange: (themeKey: string) => void;
+  onThemeChange: (theme: string) => void;
   fontSize: number;
   onFontSizeChange: (size: number) => void;
-  cursorStyle: 'block' | 'underline' | 'bar';
-  onCursorStyleChange: (style: 'block' | 'underline' | 'bar') => void;
+  cursorStyle: "block" | "underline" | "bar";
+  onCursorStyleChange: (style: "block" | "underline" | "bar") => void;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -22,106 +31,105 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   cursorStyle,
   onCursorStyleChange,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000] flex items-center justify-center animate-[fadeIn_0.2s_ease-out]" onClick={onClose}>
-      <div 
-        className="bg-[#161b22] border border-blue-500/20 rounded-xl w-[400px] max-w-[90%] shadow-2xl flex flex-col animate-[slideUp_0.3s_cubic-bezier(0.16,1,0.3,1)]" 
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center px-5 py-4 border-b border-neutral-700/50">
-          <h2 className="text-lg font-semibold text-neutral-100 m-0">Settings</h2>
-          <button 
-            className="bg-transparent border-none text-neutral-400 cursor-pointer p-1 rounded hover:bg-red-500/15 hover:text-red-400 transition-colors flex items-center justify-center" 
-            onClick={onClose}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-        
-        <div className="p-5 flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <label className="text-sm text-neutral-400 font-medium">Theme</label>
-            <select 
-              value={currentTheme} 
-              onChange={(e) => onThemeChange(e.target.value)}
-              className="bg-[#0d1117] border border-neutral-700 text-neutral-100 px-3 py-2 rounded-md text-sm outline-none transition-colors cursor-pointer focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
-            >
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md bg-gradient-to-b from-zinc-900 to-zinc-950 border-zinc-800/50 shadow-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+              <Palette className="h-4 w-4 text-white" />
+            </div>
+            Settings
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* Theme Selection */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+              <Palette className="h-4 w-4 text-cyan-400" />
+              Theme
+            </label>
+            <div className="grid grid-cols-2 gap-2">
               {Object.entries(themes).map(([key, theme]) => (
-                <option key={key} value={key}>
-                  {theme.name}
-                </option>
+                <button
+                  key={key}
+                  onClick={() => onThemeChange(key)}
+                  className={`flex items-center gap-2 p-3 rounded-xl transition-all duration-200 ${
+                    currentTheme === key
+                      ? "bg-gradient-to-br from-cyan-500/20 to-blue-600/20 ring-1 ring-cyan-500/30 text-white"
+                      : "bg-zinc-800/30 hover:bg-zinc-800/50 text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <div
+                    className="w-5 h-5 rounded-full ring-1 ring-white/20"
+                    style={{ backgroundColor: theme.background }}
+                  />
+                  <span className="text-xs font-medium">{theme.name}</span>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm text-neutral-400 font-medium">Font Size ({fontSize}px)</label>
-            <input 
-              type="range" 
-              min="10" 
-              max="24" 
-              step="1" 
-              value={fontSize} 
-              onChange={(e) => onFontSizeChange(Number(e.target.value))}
-              className="w-full h-1.5 bg-neutral-700 rounded-full appearance-none outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform hover:[&::-webkit-slider-thumb]:scale-110"
-            />
+          <Separator className="bg-zinc-800/50" />
+
+          {/* Font Size */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+              <Type className="h-4 w-4 text-emerald-400" />
+              Font Size
+            </label>
+            <div className="flex items-center gap-4 bg-zinc-800/30 rounded-xl p-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onFontSizeChange(Math.max(10, fontSize - 1))}
+                className="h-9 w-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-700 text-white"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <div className="flex-1 text-center">
+                <span className="text-2xl font-bold text-white">{fontSize}</span>
+                <span className="text-zinc-500 text-sm ml-1">px</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onFontSizeChange(Math.min(24, fontSize + 1))}
+                className="h-9 w-9 rounded-lg bg-zinc-700/50 hover:bg-zinc-700 text-white"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm text-neutral-400 font-medium">Cursor Style</label>
-            <div className="flex gap-3 bg-[#0d1117] p-1 rounded-md border border-neutral-700">
-              <label className={`flex-1 flex items-center justify-center p-2 cursor-pointer rounded text-[13px] text-neutral-400 transition-all relative ${cursorStyle === 'block' ? 'bg-[#21262d] text-neutral-100 font-medium' : ''}`}>
-                <input 
-                  type="radio" 
-                  name="cursorStyle" 
-                  value="block" 
-                  checked={cursorStyle === 'block'} 
-                  onChange={() => onCursorStyleChange('block')}
-                  className="hidden"
-                />
-                Block
-              </label>
-              <label className={`flex-1 flex items-center justify-center p-2 cursor-pointer rounded text-[13px] text-neutral-400 transition-all relative ${cursorStyle === 'bar' ? 'bg-[#21262d] text-neutral-100 font-medium' : ''}`}>
-                <input 
-                  type="radio" 
-                  name="cursorStyle" 
-                  value="bar" 
-                  checked={cursorStyle === 'bar'} 
-                  onChange={() => onCursorStyleChange('bar')}
-                   className="hidden"
-                />
-                Bar
-              </label>
-              <label className={`flex-1 flex items-center justify-center p-2 cursor-pointer rounded text-[13px] text-neutral-400 transition-all relative ${cursorStyle === 'underline' ? 'bg-[#21262d] text-neutral-100 font-medium' : ''}`}>
-                <input 
-                  type="radio" 
-                  name="cursorStyle" 
-                  value="underline" 
-                  checked={cursorStyle === 'underline'} 
-                  onChange={() => onCursorStyleChange('underline')}
-                   className="hidden"
-                />
-                Underline
-              </label>
+          <Separator className="bg-zinc-800/50" />
+
+          {/* Cursor Style */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium text-zinc-300 flex items-center gap-2">
+              <MousePointer2 className="h-4 w-4 text-purple-400" />
+              Cursor Style
+            </label>
+            <div className="flex gap-2">
+              {(["block", "underline", "bar"] as const).map((style) => (
+                <button
+                  key={style}
+                  onClick={() => onCursorStyleChange(style)}
+                  className={`flex-1 py-2.5 px-4 rounded-xl transition-all duration-200 text-sm font-medium capitalize ${
+                    cursorStyle === style
+                      ? "bg-gradient-to-br from-purple-500/20 to-pink-600/20 ring-1 ring-purple-500/30 text-white"
+                      : "bg-zinc-800/30 hover:bg-zinc-800/50 text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {style}
+                </button>
+              ))}
             </div>
           </div>
         </div>
-
-        <div className="px-5 py-4 border-t border-neutral-700/50 flex justify-end">
-          <button 
-            className="bg-green-700 text-white border-none py-2 px-4 rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-green-600" 
-            onClick={onClose}
-          >
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

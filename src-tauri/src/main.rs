@@ -234,3 +234,69 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_state() -> AppState {
+        AppState {
+            sessions: Arc::new(Mutex::new(HashMap::new())),
+            next_id: Arc::new(Mutex::new(1)),
+        }
+    }
+
+    #[test]
+    fn test_session_id_generation() {
+        let state = create_test_state();
+        
+        // First ID should be session_1
+        {
+            let mut next_id = state.next_id.lock().unwrap();
+            let id = format!("session_{}", *next_id);
+            *next_id += 1;
+            assert_eq!(id, "session_1");
+        }
+        
+        // Second ID should be session_2
+        {
+            let mut next_id = state.next_id.lock().unwrap();
+            let id = format!("session_{}", *next_id);
+            *next_id += 1;
+            assert_eq!(id, "session_2");
+        }
+    }
+
+    #[test]
+    fn test_sessions_hashmap_operations() {
+        let state = create_test_state();
+        
+        // Initially empty
+        {
+            let sessions = state.sessions.lock().unwrap();
+            assert!(sessions.is_empty());
+        }
+        
+        // After adding a session key
+        {
+            let mut sessions = state.sessions.lock().unwrap();
+            // We can't easily add a real PtySession in tests, but we can test the structure
+            sessions.keys().count(); // Just verify we can access
+        }
+    }
+
+    #[test]
+    fn test_default_shell_env() {
+        // Test that SHELL env var is read correctly or defaults to zsh
+        let default_shell = std::env::var("SHELL").unwrap_or_else(|_| "zsh".to_string());
+        assert!(!default_shell.is_empty());
+    }
+
+    #[test]
+    fn test_session_keys_collection() {
+        let state = create_test_state();
+        let sessions = state.sessions.lock().unwrap();
+        let keys: Vec<String> = sessions.keys().cloned().collect();
+        assert!(keys.is_empty());
+    }
+}

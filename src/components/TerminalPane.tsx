@@ -3,7 +3,8 @@ import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import { invoke } from "@tauri-apps/api/core";
 import "xterm/css/xterm.css";
-import { TerminalTheme } from "../themes";
+import { TerminalTheme } from "@/themes";
+import { cn } from "@/lib/utils";
 
 interface TerminalPaneProps {
   sessionId: string;
@@ -157,9 +158,10 @@ const TerminalPane: React.FC<TerminalPaneProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full bg-neutral-950 ${
-        isActive ? "ring-1 ring-blue-500/50" : ""
-      }`}
+      className={cn(
+        "relative w-full h-full bg-background",
+        isActive && "ring-1 ring-primary/50"
+      )}
       onClick={onFocus}
     >
       <div ref={terminalRef} className="w-full h-full p-1" />
