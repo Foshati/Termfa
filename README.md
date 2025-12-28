@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Termfa Logo](src-tauri/icons/icon.png)
+<img width="500" height="500" alt="termfa" src="https://github.com/user-attachments/assets/3b80dede-6fed-4f80-9008-a9a2fcdebba2" />
 
 **A fast, lightweight terminal for DevOps — connect to your servers instantly**
 
