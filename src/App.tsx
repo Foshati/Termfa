@@ -1,248 +1,359 @@
 import "./App.css";
-import { useEffect, useRef, useCallback, useState } from "react";
-import { Terminal } from "xterm";
-import { FitAddon } from "xterm-addon-fit";
+import { useEffect, useCallback, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "xterm/css/xterm.css";
 import SettingsModal from "./components/SettingsModal";
 import Sidebar from "./components/Sidebar";
 import HostList from "./components/HostList";
-import { Host } from "./types";
+import TabBar from "./components/TabBar";
+import LayoutRenderer from "./components/LayoutRenderer";
+import { Host, Tab, TerminalSession, LayoutNode } from "./types";
 import { themes } from "./themes";
+import { saveTabState, getSettings, saveSettings } from "./utils/storage";
 
 function App() {
-  const terminalRef = useRef<HTMLDivElement>(null);
-  const terminalInstanceRef = useRef<Terminal | null>(null);
-  const fitAddonRef = useRef<FitAddon | null>(null);
-  const isReadingRef = useRef(false);
-  
-  const [activeTab, setActiveTab] = useState<'terminal' | 'hosts' | 'settings'>('terminal');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
   // Settings State
   const [currentTheme, setCurrentTheme] = useState("default");
   const [fontSize, setFontSize] = useState(14);
-  const [cursorStyle, setCursorStyle] = useState<'block' | 'underline' | 'bar'>("block");
+  const [cursorStyle, setCursorStyle] = useState<"block" | "underline" | "bar">("block");
+  
+  // UI State
+  const [activeView, setActiveView] = useState<"terminal" | "hosts">("terminal");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Session State
-  const [currentHost, setCurrentHost] = useState<Host | null>(null);
+  // Multi-tab State
+  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [activeTabId, setActiveTabId] = useState<string>("");
+  const [sessions, setSessions] = useState<Map<string, TerminalSession>>(new Map());
 
-  const readFromPty = useCallback(async () => {
-    if (isReadingRef.current) return;
-    isReadingRef.current = true;
-    
-    try {
-      const data = await invoke("async_read_from_pty") as string;
-      if (data && terminalInstanceRef.current) {
-        terminalInstanceRef.current.write(data);
-      }
-    } catch (error) {
-      console.error("Error reading from PTY:", error);
-    }
-    
-    isReadingRef.current = false;
-    setTimeout(readFromPty, 50);
+  // Load settings on mount
+  useEffect(() => {
+    const settings = getSettings();
+    setCurrentTheme(settings.theme);
+    setFontSize(settings.fontSize);
+    setCursorStyle(settings.cursorStyle);
   }, []);
 
-  // Initialize Terminal
+  // Save settings when they change
   useEffect(() => {
-    const initTerminal = async () => {
-      const term = new Terminal({
-        fontFamily: "'MesloLGS NF', 'Hack Nerd Font', 'JetBrainsMono Nerd Font', 'FiraCode Nerd Font', monospace",
-        fontSize: fontSize,
-        lineHeight: 1.2,
-        letterSpacing: 0,
-        cursorStyle: cursorStyle,
-        cursorBlink: true,
-        theme: themes[currentTheme],
-        allowTransparency: true,
-        convertEol: true,
-        scrollback: 10000,
-        tabStopWidth: 4,
-        fastScrollModifier: 'alt',
-        fastScrollSensitivity: 5,
-        scrollSensitivity: 1,
-      });
-
-      const fitAddon = new FitAddon();
-      term.loadAddon(fitAddon);
-
-      if (terminalRef.current) {
-        terminalRef.current.innerHTML = '';
-        
-        term.open(terminalRef.current);
-        terminalInstanceRef.current = term;
-        fitAddonRef.current = fitAddon;
-        
-        term.onData(writeToPty);
-        
-        // Start default shell if no host connected yet
-        if (!currentHost) {
-           await startShell();
-        }
-        
-        fitTerminal();
-        readFromPty();
-      }
-    };
-
-    initTerminal();
-
-    const handleResize = () => fitTerminal();
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (terminalInstanceRef.current) {
-        terminalInstanceRef.current.dispose();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update Terminal Options when settings change
-  useEffect(() => {
-    if (terminalInstanceRef.current) {
-      terminalInstanceRef.current.options.theme = themes[currentTheme];
-      terminalInstanceRef.current.options.fontSize = fontSize;
-      terminalInstanceRef.current.options.cursorStyle = cursorStyle;
-      
-      if (fitAddonRef.current) {
-        fitAddonRef.current.fit();
-        if (terminalInstanceRef.current) {
-             invoke("async_resize_pty", {
-              rows: terminalInstanceRef.current.rows,
-              cols: terminalInstanceRef.current.cols,
-            }).catch(console.error);
-        }
-      }
-    }
+    saveSettings({ theme: currentTheme, fontSize, cursorStyle });
   }, [currentTheme, fontSize, cursorStyle]);
 
-  const fitTerminal = async () => {
-    if (fitAddonRef.current && terminalInstanceRef.current) {
-        // Wait a bit for layout to settle, especially when switching tabs
-        setTimeout(async () => {
-            fitAddonRef.current?.fit();
-            try {
-                if (terminalInstanceRef.current) {
-                    await invoke("async_resize_pty", {
-                    rows: terminalInstanceRef.current.rows,
-                    cols: terminalInstanceRef.current.cols,
-                    });
-                }
-            } catch (error) {
-                console.error("Error resizing PTY:", error);
-            }
-        }, 100);
-    }
-  };
-
-  // Re-fit when tab changes
-  useEffect(() => {
-      if (activeTab === 'terminal') {
-          fitTerminal();
-      }
-  }, [activeTab]);
-
-  const writeToPty = async (data: string) => {
+  // Create a new session
+  const createSession = useCallback(async (host?: Host): Promise<string> => {
     try {
-      await invoke("async_write_to_pty", { data });
-    } catch (error) {
-      console.error("Error writing to PTY:", error);
-    }
-  };
-
-  const startShell = async (host?: Host) => {
-    try {
-      let program = undefined;
-      let args = undefined;
+      let program: string | undefined;
+      let args: string[] | undefined;
 
       if (host) {
-          program = "ssh";
-          args = [host.username + "@" + host.hostname, "-p", host.port.toString()];
-          
-          if (host.authType === "key" && host.keyPath) {
-              args.push("-i");
-              args.push(host.keyPath);
-          }
-          // Note: Password auth is interactive in SSH. xterm will handle the password prompt.
+        program = "ssh";
+        args = [host.username + "@" + host.hostname, "-p", host.port.toString()];
+        if (host.authType === "key" && host.keyPath) {
+          args.push("-i", host.keyPath);
+        }
       }
 
-      await invoke("async_create_shell", { program, args });
-      
-      if (terminalInstanceRef.current) {
-          terminalInstanceRef.current.clear();
-          terminalInstanceRef.current.reset();
-      }
-      setCurrentHost(host || null);
+      const result = await invoke<{ session_id: string }>("create_session", {
+        program,
+        args,
+      });
+
+      const session: TerminalSession = {
+        id: result.session_id,
+        host,
+        title: host ? `${host.label}` : "Local",
+        createdAt: Date.now(),
+      };
+
+      setSessions((prev) => new Map(prev).set(result.session_id, session));
+      return result.session_id;
     } catch (error) {
-      console.error("Error creating shell:", error);
+      console.error("Error creating session:", error);
+      throw error;
     }
-  };
+  }, []);
 
-  const handleConnect = async (host: Host) => {
-      setActiveTab('terminal');
-      await startShell(host);
-  };
+  // Destroy a session
+  const destroySession = useCallback(async (sessionId: string) => {
+    try {
+      await invoke("destroy_session", { sessionId });
+      setSessions((prev) => {
+        const next = new Map(prev);
+        next.delete(sessionId);
+        return next;
+      });
+    } catch (error) {
+      console.error("Error destroying session:", error);
+    }
+  }, []);
+
+  // Get all session IDs from a layout
+  const getSessionIdsFromLayout = useCallback((node: LayoutNode): string[] => {
+    if (node.type === "terminal") {
+      return node.sessionId ? [node.sessionId] : [];
+    }
+    return [
+      ...getSessionIdsFromLayout(node.first),
+      ...getSessionIdsFromLayout(node.second),
+    ];
+  }, []);
+
+  // Create a new tab
+  const handleNewTab = useCallback(async () => {
+    const sessionId = await createSession();
+    const newTab: Tab = {
+      id: `tab_${Date.now()}`,
+      title: "Terminal",
+      layout: { type: "terminal", sessionId },
+      activeSessionId: sessionId,
+    };
+    setTabs((prev) => [...prev, newTab]);
+    setActiveTabId(newTab.id);
+  }, [createSession]);
+
+  // Close a tab
+  const handleCloseTab = useCallback(
+    async (tabId: string) => {
+      const tab = tabs.find((t) => t.id === tabId);
+      if (!tab) return;
+
+      // Destroy all sessions in the tab
+      const sessionIds = getSessionIdsFromLayout(tab.layout);
+      for (const sessionId of sessionIds) {
+        await destroySession(sessionId);
+      }
+
+      setTabs((prev) => {
+        const newTabs = prev.filter((t) => t.id !== tabId);
+        if (activeTabId === tabId && newTabs.length > 0) {
+          setActiveTabId(newTabs[0].id);
+        }
+        return newTabs;
+      });
+    },
+    [tabs, activeTabId, getSessionIdsFromLayout, destroySession]
+  );
+
+  // Rename a tab
+  const handleTabRename = useCallback((tabId: string, newTitle: string) => {
+    setTabs((prev) =>
+      prev.map((tab) => (tab.id === tabId ? { ...tab, title: newTitle } : tab))
+    );
+  }, []);
+
+  // Update layout for active tab
+  const handleLayoutChange = useCallback((updatedLayout: LayoutNode) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.id === activeTabId ? { ...tab, layout: updatedLayout } : tab
+      )
+    );
+  }, [activeTabId]);
+
+  // Focus on a session
+  const handleSessionFocus = useCallback((sessionId: string) => {
+    setTabs((prev) =>
+      prev.map((tab) =>
+        tab.id === activeTabId ? { ...tab, activeSessionId: sessionId } : tab
+      )
+    );
+  }, [activeTabId]);
+
+  // Split current pane
+  const splitPane = useCallback(
+    async (direction: "horizontal" | "vertical") => {
+      const activeTab = tabs.find((t) => t.id === activeTabId);
+      if (!activeTab) return;
+
+      const newSessionId = await createSession();
+
+      const splitNode = (node: LayoutNode): LayoutNode => {
+        if (node.type === "terminal" && node.sessionId === activeTab.activeSessionId) {
+          return {
+            type: "split",
+            direction,
+            ratio: 0.5,
+            first: node,
+            second: { type: "terminal", sessionId: newSessionId },
+          };
+        }
+        if (node.type === "split") {
+          return {
+            ...node,
+            first: splitNode(node.first),
+            second: splitNode(node.second),
+          };
+        }
+        return node;
+      };
+
+      setTabs((prev) =>
+        prev.map((tab) =>
+          tab.id === activeTabId
+            ? { ...tab, layout: splitNode(tab.layout), activeSessionId: newSessionId }
+            : tab
+        )
+      );
+    },
+    [tabs, activeTabId, createSession]
+  );
+
+  // Initialize first tab
+  useEffect(() => {
+    if (tabs.length === 0) {
+      handleNewTab();
+    }
+  }, [tabs.length, handleNewTab]);
+
+  // Save tab state periodically
+  useEffect(() => {
+    if (tabs.length > 0) {
+      saveTabState({
+        tabs,
+        activeTabId,
+        sessions: Array.from(sessions.values()),
+      });
+    }
+  }, [tabs, activeTabId, sessions]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.metaKey || e.ctrlKey;
+
+      // Cmd+T: New tab
+      if (isMod && e.key === "t") {
+        e.preventDefault();
+        handleNewTab();
+      }
+      // Cmd+W: Close tab
+      else if (isMod && e.key === "w") {
+        e.preventDefault();
+        if (tabs.length > 1 && activeTabId) {
+          handleCloseTab(activeTabId);
+        }
+      }
+      // Cmd+D: Split vertical
+      else if (isMod && e.key === "d" && !e.shiftKey) {
+        e.preventDefault();
+        splitPane("vertical");
+      }
+      // Cmd+Shift+D: Split horizontal
+      else if (isMod && e.shiftKey && e.key === "D") {
+        e.preventDefault();
+        splitPane("horizontal");
+      }
+      // Cmd+[ or Cmd+]: Switch tabs
+      else if (isMod && (e.key === "[" || e.key === "]")) {
+        e.preventDefault();
+        const currentIndex = tabs.findIndex((t) => t.id === activeTabId);
+        const newIndex =
+          e.key === "["
+            ? (currentIndex - 1 + tabs.length) % tabs.length
+            : (currentIndex + 1) % tabs.length;
+        setActiveTabId(tabs[newIndex].id);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [tabs, activeTabId, handleNewTab, handleCloseTab, splitPane]);
+
+  // Handle connecting to a host from hosts list
+  const handleConnect = useCallback(
+    async (host: Host) => {
+      setActiveView("terminal");
+      const sessionId = await createSession(host);
+      const newTab: Tab = {
+        id: `tab_${Date.now()}`,
+        title: host.label,
+        layout: { type: "terminal", sessionId },
+        activeSessionId: sessionId,
+      };
+      setTabs((prev) => [...prev, newTab]);
+      setActiveTabId(newTab.id);
+    },
+    [createSession]
+  );
+
+  const activeTab = tabs.find((t) => t.id === activeTabId);
 
   return (
     <div className="flex bg-neutral-950 h-screen text-white overflow-hidden font-sans">
-      <Sidebar 
-        activeTab={activeTab === 'settings' ? 'terminal' : activeTab} 
+      <Sidebar
+        activeTab={activeView}
         onTabChange={(tab) => {
-            if (tab === 'settings') {
-                setIsSettingsOpen(true);
-            } else {
-                setActiveTab(tab);
-            }
-        }} 
+          if (tab === "settings") {
+            setIsSettingsOpen(true);
+          } else {
+            setActiveView(tab as "terminal" | "hosts");
+          }
+        }}
       />
 
       <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Terminal View */}
-        <div 
-            className={`flex-1 flex flex-col min-h-0 transition-opacity duration-200 ${
-                activeTab === 'terminal' ? 'opacity-100 z-10' : 'opacity-0 absolute inset-0 pointer-events-none'
-            }`}
+        <div
+          className={`flex-1 flex flex-col min-h-0 transition-opacity duration-200 ${
+            activeView === "terminal"
+              ? "opacity-100 z-10"
+              : "opacity-0 absolute inset-0 pointer-events-none"
+          }`}
         >
-             <div className="bg-neutral-900 border-b border-neutral-800 px-4 py-2 flex items-center justify-between h-12">
-                <div className="flex items-center gap-2 text-sm text-neutral-400">
-                     <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
-                     {currentHost ? `${currentHost.username}@${currentHost.hostname}` : 'Local Terminal'}
-                </div>
-             </div>
-             <div className="flex-1 bg-neutral-950 p-2 overflow-hidden relative">
-                <div
-                    id="terminal"
-                    ref={terminalRef}
-                    className="w-full h-full"
-                ></div>
-             </div>
+          {/* Tab Bar */}
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onTabChange={setActiveTabId}
+            onNewTab={handleNewTab}
+            onCloseTab={handleCloseTab}
+            onTabRename={handleTabRename}
+          />
+
+          {/* Terminal Content */}
+          <div className="flex-1 bg-neutral-950 overflow-hidden relative">
+            {activeTab && (
+              <LayoutRenderer
+                node={activeTab.layout}
+                activeSessionId={activeTab.activeSessionId}
+                onSessionFocus={handleSessionFocus}
+                onLayoutChange={handleLayoutChange}
+                theme={themes[currentTheme]}
+                fontSize={fontSize}
+                cursorStyle={cursorStyle}
+              />
+            )}
+          </div>
         </div>
 
         {/* Hosts View */}
-        {activeTab === 'hosts' && (
-            <div className="h-full flex">
-                <HostList onConnect={handleConnect} />
-                {/* Could add a preview/details pane here for right side of hosts list */}
-                <div className="flex-1 bg-neutral-950 flex items-center justify-center text-neutral-600">
-                    <div className="text-center">
-                        <svg className="w-24 h-24 mx-auto mb-4 opacity-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                             <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                            <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                            <line x1="6" y1="6" x2="6.01" y2="6"></line>
-                            <line x1="6" y1="18" x2="6.01" y2="18"></line>
-                        </svg>
-                        <p>Select a host to connect</p>
-                    </div>
-                </div>
+        {activeView === "hosts" && (
+          <div className="h-full flex">
+            <HostList onConnect={handleConnect} />
+            <div className="flex-1 bg-neutral-950 flex items-center justify-center text-neutral-600">
+              <div className="text-center">
+                <svg
+                  className="w-24 h-24 mx-auto mb-4 opacity-20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                  <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                  <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                </svg>
+                <p>Select a host to connect</p>
+              </div>
             </div>
+          </div>
         )}
-
       </div>
-      
-      <SettingsModal 
+
+      <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         currentTheme={currentTheme}

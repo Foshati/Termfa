@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Host } from '../types';
+import { Host } from '../types/index';
 import { getHosts, saveHosts } from '../utils/storage';
 import HostForm from './HostForm';
 
