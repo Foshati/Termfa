@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Termfa",
   "version": "0.1.0",
-  "identifier": "com.fa.Termfa",
+  "identifier": "com.foshati.termfa",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1421",
@@ -13,8 +13,12 @@
     "windows": [
       {
         "title": "Termfa",
-        "width": 800,
-        "height": 600
+        "width": 1000,
+        "height": 700,
+        "minWidth": 600,
+        "minHeight": 400,
+        "decorations": true,
+        "transparent": false
       }
     ],
     "security": {
@@ -30,6 +34,24 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "category": "DeveloperTool",
+    "shortDescription": "A modern terminal emulator",
+    "longDescription": "Termfa is a modern, lightweight terminal emulator with multi-tab and split pane support, built with Tauri and React.",
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    },
+    "windows": {
+      "wix": null
+    },
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      },
+      "deb": {
+        "depends": []
+      }
+    }
   }
 }
+

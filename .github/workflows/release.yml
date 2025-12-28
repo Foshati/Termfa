@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: "macos-latest"
+            args: "--target aarch64-apple-darwin"
+            name: "macOS-ARM64"
+          - platform: "macos-latest"
+            args: "--target x86_64-apple-darwin"
+            name: "macOS-Intel"
+          - platform: "ubuntu-22.04"
+            args: ""
+            name: "Linux"
+          - platform: "windows-latest"
+            args: ""
+            name: "Windows"
+
+    runs-on: ${{ matrix.platform }}
+    name: Build (${{ matrix.name }})
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Install frontend dependencies
+        run: bun install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Termfa ${{ github.ref_name }}"
+          releaseBody: |
+            ## Termfa ${{ github.ref_name }}
+            
+            ### Downloads
+            - **macOS (Apple Silicon)**: `.dmg` file for M1/M2/M3 Macs
+            - **macOS (Intel)**: `.dmg` file for Intel Macs
+            - **Windows**: `.msi` installer or `.exe`
+            - **Linux**: `.deb`, `.rpm`, or `.AppImage`
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
