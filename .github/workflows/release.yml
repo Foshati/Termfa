@@ -39,10 +39,15 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Setup Rust
-        uses: dtolnay/rust-action@stable
+      - name: Setup Rust (macOS)
+        if: matrix.platform == 'macos-latest'
+        uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Setup Rust (Other)
+        if: matrix.platform != 'macos-latest'
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
